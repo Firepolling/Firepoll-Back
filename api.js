@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const nanoID = require('nanoid')
 const app = express()
 const port = 8000
 
@@ -16,7 +17,7 @@ let currentPolls = {}
 
  const interval = setInterval(()=>{
      console.log(currentPolls)
- },5000) 
+ },10000) 
 
 
 
@@ -45,9 +46,23 @@ app.post('/createpoll',data.none(),(req,res)=>{
 	for(let x = 0;x<req.body.Options.length;x++){
 		votes.push(0)
 	}
-	currentPolls[req.body.Title] = [req.body.Options,votes]
-	console.log(currentPolls[req.body.Title])
-	res.status(200).send("Connection Valid")
+	id = nanoID.nanoid()
+	currentPolls[id] = {"Title":req.body.Title,"Options":req.body.Options,"Vote":votes};
+	//[req.body.Title,req.body.Options,votes]
+	console.log(currentPolls[id])
+	res.status(200).send(id)
+})
+
+app.get('/getPoll',data.none(),(req,res)=>{
+	const keyList = Object.keys(currentPolls);
+	if(keyList.includes(req.query.pollID)){
+		res.status(200).send(currentPolls[req.query.pollID])
+	}
+	else
+	{
+		res.status(400).send()
+	}
+	
 })
 
 
