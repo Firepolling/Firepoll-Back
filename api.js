@@ -46,7 +46,6 @@ let currentPolls = {}
 
 app.get('/',(req,res) => {
 	res.status(200).send("Connection Valid")
-	console.log("Test")
 })
 
 
