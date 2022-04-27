@@ -83,8 +83,9 @@ app.post('/vote',(req,res)=>{
 })
 
 app.get('/test',(req,res)=>{
-	console.log(req.header['x-forwarded-for'])
-	res.status(200).send(req.header('x-forwarded-for'))
+	var ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
+	console.log(ip)
+	res.status(200).send(ip)
 })
 
 
