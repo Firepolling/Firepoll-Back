@@ -8,7 +8,7 @@ const port = 8000
 const data = multer()
 
 app.use(express.json());
-
+app.set('trust proxy', true)
 
 app.use(cors({ origin: '*', credentials: true }));
 
@@ -80,6 +80,10 @@ app.post('/vote',(req,res)=>{
 	console.log(currentPolls[req.query.pollID])
 	
 	res.status(200).send()
+})
+
+app.post('/test',(req,res)=>{
+	res.status(200).send(req.header('x-forwarded-for'))
 })
 
 
