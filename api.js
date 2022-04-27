@@ -82,7 +82,7 @@ app.post('/vote',(req,res)=>{
 	res.status(200).send()
 })
 
-app.post('/test',(req,res)=>{
+app.get('/test',(req,res)=>{
 	res.status(200).send(req.header('x-forwarded-for'))
 })
 
