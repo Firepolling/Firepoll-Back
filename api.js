@@ -14,39 +14,32 @@ app.use(cors({ origin: '*', credentials: true }));
 
 
 let currentPolls = {}
+let ip_log = {}
 
- const interval = setInterval(()=>{
-     console.log(currentPolls)
- },10000) 
-
+ 
+// Every X hours, filter all the current polls in order to manage memory
  const cut = setInterval(()=>{
-	let keys= Object.keys(currentPolls)
-	console.log(keys)
-	let len = Object.keys(currentPolls).length;
-	let newPolls = {}
-	 for(k in keys)
+	let keys= Object.keys(currentPolls) // get all keys
+	let newPolls = {} // new polls to return
+	let newLogs = {} // new logs to return
+	 for(k in keys) // for each key in the collection
 	{
 		currentPolls[keys[k]].Life += 1;
 		if(currentPolls[keys[k]].Life > 1)
 		{
 			console.log(`Removed ${currentPolls[keys[k]]}}`)
+			
 		}
 		else // if not out of lifespan then add to new array
 		{
-			newPolls[keys[k]]= currentPolls[keys[k]]
+			newPolls[keys[k]]= currentPolls[keys[k]];
+			newLogs[keys[k]] = ip_log[keys[k]];
 		}
 	}
-	currentPolls = {...newPolls}
-},1000*60*60*8) // pool lives for 8 hours atleast
+	currentPolls = {...newPolls} // set old to new
+	ip_log = {...newLogs} // set old to new
+},1000*60*60*6) // poll has lifetiem of 6 hours atleast
 
-
-
-
-
-
-app.get('/',(req,res) => {
-	res.status(200).send("Connection Valid")
-})
 
 
 
@@ -54,39 +47,43 @@ app.get('/',(req,res) => {
 app.post('/createpoll',data.none(),(req,res)=>{
 	let votes = []
 	for(let x = 0;x<req.body.Options.length;x++){
-		votes.push(0)
+		votes.push(0) // create an empty array to hold vote data
 	}
 	id = nanoID.nanoid()
 	currentPolls[id] = {"Title":req.body.Title,"Options":req.body.Options,"Vote":votes,Life:0};
-	console.log(currentPolls[id])
+	ip_log[id] = []; // create an empty list to track ips
 	res.status(200).send(id)
 })
 
 app.get('/getPoll',data.none(),(req,res)=>{
-	const keyList = Object.keys(currentPolls);
-	if(keyList.includes(req.query.pollID)){
-		res.status(200).send(currentPolls[req.query.pollID])
+	const keyList = Object.keys(currentPolls); // get all keys for current polls
+	if(keyList.includes(req.query.pollID)){ // check if poll id is valid
+		res.status(200).send(currentPolls[req.query.pollID]) // return the data back to the request
 	}
 	else
 	{
-		res.status(400).send()
+		res.status(400).send() //return valid request but invalid parameters
 	}
 	
 })
 
 app.post('/vote',(req,res)=>{
+	var ip = req.headers['x-real-ip'] || req.connection.remoteAddress; // get the ip of the request
 	const {pollID,Choice} = req.query
-	currentPolls[req.query.pollID].Vote[Choice] = currentPolls[req.query.pollID].Vote[Choice] +1
-	console.log(currentPolls[req.query.pollID])
+	if(!ip_log[pollID].includes(ip)) // if the users ip is not already requested on the poll
+	{
+		currentPolls[pollID].Vote[Choice] = currentPolls[pollID].Vote[Choice] +1 // add vote to counter
+		ip_log[pollID].push(ip) // add ip to list of ips that voted
+	}
 	
 	res.status(200).send()
 })
 
-app.get('/test',(req,res)=>{
-	var ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
-	console.log(ip)
-	res.status(200).send(ip)
-})
+// app.get('/test',(req,res)=>{
+// 	var ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
+// 	console.log(ip)
+// 	res.status(200).send(ip)
+// })
 
 
 app.listen(port, () => console.log(`Live on http://localhost:${port}`))
